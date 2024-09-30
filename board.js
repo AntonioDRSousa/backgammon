@@ -1,4 +1,22 @@
+/**
+* represent board of game
+* store state of board and draw board
+* @class
+*/
 class Board{
+	/**
+	* @constructor
+	* @param {HTMLCanvasElement} canvas - canvas
+	* @param {CanvasRenderingContext2D} ctx - context of canvas
+	* @param {number} bsize - size of border in board
+	* @param {number} gap - gap between pieces in a position
+	*	gap is a float value
+	*	gap should be > 1.0
+	*	gap = 1.0 there isn't space between pieces
+	*	gap < 1.0 pieces collision
+	*	the greater the gap, much bigger are spaces between pieces
+	* @param {string[]} colors - codes of colors used for drawing game
+	*/
 	constructor(canvas,ctx,bsize,gap,colors){
 		this.ctx=ctx;
 		this.set_sizes(canvas.width,canvas.height,bsize,gap);
@@ -76,10 +94,6 @@ class Board{
 	* @return {void}
 	*/
 	play(){
-		/*
-			24 positions
-			2 end position for each player
-		*/
 		this.start_position();
 		this.draw();
 	}
@@ -91,11 +105,19 @@ class Board{
 	*/
 	start_position(){
 		/*
+			24 positions
+			1 end position for each player : total = 2
+			1 captured positions for each player : total = 2
+			
+			1 .. 24 : positions
+			0 , 25  : end positions
+			26 , 27 : captured positions
+			
 			>0 black pieces
 			<0 white pieces
 			=0 witout pieces
 		*/
-		this.board = new Array(26).fill(0);
+		this.board = new Array(28).fill(0);
 		this.board[1]=-2;
 		this.board[6]=5;
 		this.board[8]=3;
@@ -104,6 +126,13 @@ class Board{
 		this.board[17]=-3;
 		this.board[19]=-5;
 		this.board[24]=2;
+		
+		// test
+		
+		this.board[0] = 2;
+		this.board[25] = 3;
+		this.board[26] = 8;
+		this.board[27] = 5;
 	}
 	
 	
@@ -149,6 +178,7 @@ class Board{
 	/**
 	* draw elements of board
 	* draw triangles, number positions of triangles and pieces
+	* draw captured pieces
 	* @param {void}
 	* return {void}
 	*/
@@ -208,7 +238,49 @@ class Board{
 				}	
 			}
 		}
+		
+		this.draw_captured(0,this.border_size,1);
+		this.draw_captured(1,this.height-this.border_size,-1);
+		this.draw_off();
 	}
+	
+	/**
+	* draw captured pieces of one color
+	* @param {number} c - color of pieces
+	*	c = 0 color black
+	*	c = 1 color white
+	* @param {number} y0 - begin position in y-axis for draw pieces
+	* @param {number} signal - control signal acording to color of pieces
+	* @return {void}
+	*/
+	draw_captured(c,y0,signal){
+		this.ctx.font = this.size_font_piece.toString()+"px Arial";
+		this.ctx.fillStyle = this.color_piece[c];
+		this.ctx.strokeStyle = this.color_piece[(c+1)%2];
+		
+		let x = this.width/2;
+		let y = y0+signal*this.size_piece/2;
+		
+		// draw until 5 pieces
+		for(let i=0;i<Math.min(this.board[26+c],5);i++,y+=signal*this.size_piece*this.gap){
+			this.ctx.beginPath();
+			this.ctx.arc(x,y,this.size_piece/2,0,Math.PI*2);
+			this.ctx.fill();
+			this.ctx.stroke();
+		}
+		
+		// if have more than 5 pieces, then write number of extra pieces in last piece
+		if(this.board[26+c]>5){
+			this.ctx.fillStyle = this.color_piece[(c+1)%2];
+			this.ctx.fillText(this.board[26+c]-4,x,y-signal*this.size_piece*this.gap);
+		}
+	}
+	
+	draw_off(){
+		this.ctx.fillStyle = this.color_board;
+		this.ctx.fillRect(this.width-3*this.border_size/4,this.border_size,this.border_size/2,this.height-2*this.border_size);
+	}
+	
 	
 	/**
 	* draw number positions of board
@@ -282,7 +354,7 @@ class Board{
 	* auxiliary method for calculate the y-position of piece in reference to y0 of triangle
 	* y = y0+dy
 	* @param {void}
-	* return {void}
+	* @return {void}
 	*/
 	dy(k,p){
 		return ((-1)**k)*((1/2)+(Math.abs(p)-1)*this.gap*Number(Math.abs(p)<6))*this.size_piece;
