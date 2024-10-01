@@ -126,13 +126,6 @@ class Board{
 		this.board[17]=-3;
 		this.board[19]=-5;
 		this.board[24]=2;
-		
-		// test
-		
-		this.board[0] = 2;
-		this.board[25] = 3;
-		this.board[26] = 8;
-		this.board[27] = 5;
 	}
 	
 	
@@ -147,6 +140,9 @@ class Board{
 		this.draw_base();
 		this.draw_border();
 		this.draw_board();
+		
+		let dice = new Dice(ctx,this.width,this.height,this.border_size,36, "black", "white", "black");
+		dice.draw();
 	}
 	
 	
@@ -276,9 +272,51 @@ class Board{
 		}
 	}
 	
+	/** draw removed pieces and rectangle for removed pieces
+	* @param {void}
+	* @return {void}
+	*/
 	draw_off(){
+		// dimensions of space of removed pieces
+		let x = this.width-3*this.border_size/4;
+		let y = this.border_size;
+		let dx = this.border_size/2;
+		let dy = this.height-2*this.border_size;
+		
+		/* 
+			height of piece in horizontal
+			30 pieces + 2 space between them = 32
+		*/
+		let dp = dy/32;
+		
+		// rectangle for space of removed pieces
 		this.ctx.fillStyle = this.color_board;
-		this.ctx.fillRect(this.width-3*this.border_size/4,this.border_size,this.border_size/2,this.height-2*this.border_size);
+		this.ctx.fillRect(x,y,dx,dy);
+		this.ctx.fillStyle = this.color_border;
+		this.ctx.fillRect(x,y+15*dp,dx,dp*2);
+		
+		// draw removed pieces
+		this.draw_horizontal(x,dx,dp,0);
+		this.draw_horizontal(x,dx,dp,1);
+	}
+	
+	/** draw removed pieces of one color
+	* @param {number} x - position of rectangle of removed pieces
+	* @param {number} dx - width of rectangle of removed pieces
+	* @param {number} dp - width of pieces in horizontal
+	* @param {number} arg - color of pieces
+	*	0 - white
+	*	1 - black
+	* @return {void}
+	*/
+	draw_horizontal(x,dx,dp,arg){
+		let y = arg*(this.height - dp*this.board[25]) + (-1)**(arg)*this.border_size;
+		for(let i=0;i<this.board[arg*25];i++){
+			this.ctx.fillStyle = this.color_piece[(arg+1)%2];
+			this.ctx.strokeStyle = this.color_piece[arg];
+			this.ctx.fillRect(x,y+i*dp,dx,dp);
+			this.ctx.strokeRect(x,y+i*dp,dx,dp);
+		}
 	}
 	
 	
